@@ -1,16 +1,19 @@
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
-import dash_bootstrap_components as dbc
-from dash_iconify import DashIconify
-import plotly.express as px
+import streamlit as st
 import pandas as pd
 import requests
+import plotly.express as px
 from datetime import datetime
 
 # =====================================================================
-# CONFIGURAÇÕES INICIAIS E CONSTANTES TEMA (DARK MODE MINIMALISTA)
+# CONFIGURAÇÕES INICIAIS DO STREAMLIT
 # =====================================================================
+st.set_page_config(
+    page_title="Painel Meteorológico — São Paulo",
+    page_icon="📡",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 
 # Inicializa o app Dash utilizando o grid system do Bootstrap (limpa o layout)
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
