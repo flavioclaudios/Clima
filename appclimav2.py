@@ -9,7 +9,7 @@ import streamlit as st
 # CONFIGURAÇÃO GERAL
 # =====================================================================
 st.set_page_config(
-    page_title="Weather Station · Telemetry Hub",
+    page_title="Weather Station · Dashboard",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -136,17 +136,6 @@ def inject_custom_css():
         overflow: hidden; 
         border-radius: 0 0 12px 12px;
     }
-    .hero-wrap::before { 
-        content: "WX-F1"; 
-        position: absolute; 
-        right: -1rem; 
-        top: -2rem; 
-        font-family: 'Rajdhani', sans-serif; 
-        font-size: 8rem; 
-        font-weight: 700; 
-        color: rgba(0, 210, 190, 0.04); 
-        pointer-events: none; 
-    }
     .hero-title { 
         font-family: 'Rajdhani', sans-serif !important; 
         font-size: 2.8rem !important; 
@@ -191,6 +180,7 @@ def inject_custom_css():
     .section-label { font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: #00D2BE; margin-bottom: 0.2rem; }
     .section-title { font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; font-weight: 700; color: #FFFFFF; margin: 0 0 1rem 0; }
     
+    /* Configuração de altura padronizada para os cards principais */
     .weather-card { 
         background: #0F0F1C; 
         border: 1px solid #1C1C2E; 
@@ -198,6 +188,11 @@ def inject_custom_css():
         padding: 1.8rem; 
         position: relative; 
         overflow: hidden; 
+        height: 360px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
     }
     .weather-card::after { 
         content: ""; 
@@ -208,17 +203,26 @@ def inject_custom_css():
     }
     
     .weather-city { font-family: 'Rajdhani', sans-serif; font-size: 2.2rem; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 10px; }
-    .weather-update { font-size: 0.78rem; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.08em; margin: 0.3rem 0 1rem; display: block; }
+    .weather-update { font-size: 0.78rem; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.08em; margin: 0.2rem 0 0.6rem; display: block; }
     
-    .weather-temp { font-family: 'Rajdhani', sans-serif; font-size: 4.5rem; font-weight: 700; color: #FFFFFF; line-height: 1; margin: 0; text-shadow: 0 0 20px rgba(0, 210, 190, 0.25); }
-    .weather-temp span { font-size: 2rem; color: #00D2BE; }
+    .weather-temp { font-family: 'Rajdhani', sans-serif; font-size: 4.2rem; font-weight: 700; color: #FFFFFF; line-height: 1; margin: 0; text-shadow: 0 0 20px rgba(0, 210, 190, 0.25); }
+    .weather-temp span { font-size: 1.8rem; color: #00D2BE; }
     
-    .weather-condition { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; color: #00E676; font-weight: 600; text-transform: uppercase; margin-top: 0.4rem; }
+    .weather-condition { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; color: #00E676; font-weight: 600; text-transform: uppercase; margin-top: 0.3rem; }
     
-    .weather-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid #222238; }
+    .weather-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem 1.2rem; margin-top: 0.8rem; padding-top: 1rem; border-top: 1px solid #222238; }
     .metric-box { display: flex; flex-direction: column; }
     .metric-label { font-size: 0.65rem; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
-    .metric-val { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; font-weight: 700; color: #FFFFFF; }
+    .metric-val { font-family: 'Rajdhani', sans-serif; font-size: 1.25rem; font-weight: 700; color: #FFFFFF; }
+
+    /* Container da coluna direita para igualar altura */
+    .right-col-container {
+        height: 360px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+    }
 
     .day-card {
         background: #0F0F1C;
@@ -244,11 +248,11 @@ def inject_custom_css():
 
 
 def build_telemetry_chart(hourly_data: dict) -> go.Figure:
-    """Gera gráfico duplo (temperatura e probabilidade de chuva)."""
+    """Gera gráfico duplo (temperatura e probabilidade de chuva) com altura proporcional."""
     df = pd.DataFrame(hourly_data).head(24)
     df["time"] = pd.to_datetime(df["time"]).dt.strftime("%H:%M")
 
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig = safe_fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(
         go.Bar(
@@ -275,8 +279,8 @@ def build_telemetry_chart(hourly_data: dict) -> go.Figure:
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#0F0F1C",
-        margin=dict(l=10, r=10, t=25, b=10),
-        height=265,
+        margin=dict(l=10, r=10, t=15, b=5),
+        height=300,  # Altura exata para somar perfeitamente com a barra inferior
         font=dict(family="Rajdhani, sans-serif", color="#CBD5E1"),
         legend=dict(
             orientation="h",
@@ -303,23 +307,23 @@ def main():
 
     st.markdown("""
     <div class="hero-wrap">
-        <p class="hero-sub">Global Meteorological Telemetry</p>
+        <p class="hero-sub">Monitoramento Meteorológico em Tempo Real</p>
         <h1 class="hero-title">Weather <span class="accent">Station</span> Hub</h1>
     </div>
     """, unsafe_allow_html=True)
 
     cidades_padrao = {
         "São Paulo - BR": {"lat": -23.5505, "lon": -46.6333, "flag": "br"},
-        "Monza - IT": {"lat": 45.5845, "lon": 9.2744, "flag": "it"},
-        "Silverstone - GB": {"lat": 52.0786, "lon": -1.0169, "flag": "gb"},
-        "Suzuka - JP": {"lat": 34.8824, "lon": 136.5849, "flag": "jp"},
-        "Spa-Francorchamps - BE": {"lat": 50.4372, "lon": 5.9714, "flag": "be"},
-        "Austin - US": {"lat": 30.2672, "lon": -97.7431, "flag": "us"},
+        "Nova York - US": {"lat": 40.7128, "lon": -74.0060, "flag": "us"},
+        "Londres - GB": {"lat": 51.5074, "lon": -0.1278, "flag": "gb"},
+        "Tóquio - JP": {"lat": 35.6895, "lon": 139.6917, "flag": "jp"},
+        "Paris - FR": {"lat": 48.8566, "lon": 2.3522, "flag": "fr"},
+        "Sydney - AU": {"lat": -33.8688, "lon": 151.2093, "flag": "au"},
     }
 
     col_select, col_search = st.columns([1.5, 2.5])
     with col_select:
-        st.markdown('<div class="section-label">Circuitos Pré-Carregados</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">Cidades em Destaque</div>', unsafe_allow_html=True)
         cidade_rapida = st.selectbox("Escolha rápida:", list(cidades_padrao.keys()), label_visibility="collapsed")
         coords = cidades_padrao[cidade_rapida]
         nome_cidade = cidade_rapida.split(" - ")[0]
@@ -338,7 +342,7 @@ def main():
                     nome_cidade = info["name"]
                     flag = info["country_code"]
 
-    with st.spinner("A carregar telemetria..."):
+    with st.spinner("Atualizando dados climáticos..."):
         data = fetch_weather_data(coords["lat"], coords["lon"])
 
     if not data or "current" not in data:
@@ -364,64 +368,67 @@ def main():
 
     with col_main:
         st.markdown("""
-        <div class="live-badge"><div class="live-dot"></div> Live Telemetry Stream</div>
-        <div class="section-title">Condições de Pista</div>
+        <div class="live-badge"><div class="live-dot"></div> Dados em Tempo Real</div>
+        <div class="section-title">Condições Atuais</div>
         """, unsafe_allow_html=True)
 
         card_html = f"""<div class="weather-card">
-<div class="weather-city">
-{nome_cidade}
-<img src="{flag_url}" style="height: 18px; border-radius: 2px;">
+<div>
+    <div class="weather-city">
+        {nome_cidade}
+        <img src="{flag_url}" style="height: 18px; border-radius: 2px;">
+    </div>
+    <span class="weather-update">Atualização: {hora_local}</span>
+    <div class="weather-temp">{temp}<span>°C</span></div>
+    <div class="weather-condition">{cond_texto} {icone}</div>
 </div>
-<span class="weather-update">Sensor Timestamp: {hora_local}</span>
-<div class="weather-temp">{temp}<span>°C</span></div>
-<div class="weather-condition">{cond_texto} {icone}</div>
 <div class="weather-metrics">
-<div class="metric-box">
-<span class="metric-label">Sensação Térmica</span>
-<span class="metric-val">{feels_like} <span style="font-size:0.8rem; color:#CBD5E1;">°C</span></span>
-</div>
-<div class="metric-box">
-<span class="metric-label">Umidade Relativa</span>
-<span class="metric-val">{humidity} <span style="font-size:0.8rem; color:#CBD5E1;">%</span></span>
-</div>
-<div class="metric-box">
-<span class="metric-label">Vento</span>
-<span class="metric-val">{wind_speed} <span style="font-size:0.8rem; color:#CBD5E1;">km/h</span></span>
-</div>
-<div class="metric-box">
-<span class="metric-label">Direção & Bússola</span>
-<span class="metric-val">{wind_dir}° <span style="display:inline-block; transform: rotate({wind_dir}deg); color:#00D2BE;">↑</span></span>
-</div>
-<div class="metric-box">
-<span class="metric-label">Índice UV</span>
-<span class="metric-val">{uv_index} <span style="font-size:0.8rem; color:#CBD5E1;">UV</span></span>
-</div>
-<div class="metric-box">
-<span class="metric-label">Visibilidade</span>
-<span class="metric-val">{visibilidade_km} <span style="font-size:0.8rem; color:#CBD5E1;">km</span></span>
-</div>
+    <div class="metric-box">
+        <span class="metric-label">Sensação Térmica</span>
+        <span class="metric-val">{feels_like} <span style="font-size:0.8rem; color:#CBD5E1;">°C</span></span>
+    </div>
+    <div class="metric-box">
+        <span class="metric-label">Umidade Relativa</span>
+        <span class="metric-val">{humidity} <span style="font-size:0.8rem; color:#CBD5E1;">%</span></span>
+    </div>
+    <div class="metric-box">
+        <span class="metric-label">Vento</span>
+        <span class="metric-val">{wind_speed} <span style="font-size:0.8rem; color:#CBD5E1;">km/h</span></span>
+    </div>
+    <div class="metric-box">
+        <span class="metric-label">Direção & Bússola</span>
+        <span class="metric-val">{wind_dir}° <span style="display:inline-block; transform: rotate({wind_dir}deg); color:#00D2BE;">↑</span></span>
+    </div>
+    <div class="metric-box">
+        <span class="metric-label">Índice UV</span>
+        <span class="metric-val">{uv_index} <span style="font-size:0.8rem; color:#CBD5E1;">UV</span></span>
+    </div>
+    <div class="metric-box">
+        <span class="metric-label">Visibilidade</span>
+        <span class="metric-val">{visibilidade_km} <span style="font-size:0.8rem; color:#CBD5E1;">km</span></span>
+    </div>
 </div>
 </div>"""
         st.markdown(card_html, unsafe_allow_html=True)
 
     with col_side:
         st.markdown("""
-        <div class="section-label">Telemetria 24 Horas</div>
-        <div class="section-title">Curva de Temperatura & Janela de Chuva</div>
+        <div class="section-label">Variação 24 Horas</div>
+        <div class="section-title">Temperatura & Probabilidade de Chuva</div>
         """, unsafe_allow_html=True)
 
+        # O container direito soma exatamente os mesmos 360px do cartão esquerdo
         if "hourly" in data:
             fig = build_telemetry_chart(data["hourly"])
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown(f"""
-        <div style="background: #0F0F1C; border: 1px solid #1C1C2E; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0.6rem 1.2rem; margin-top: 0.4rem;">
+        <div style="background: #0F0F1C; border: 1px solid #1C1C2E; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 0 1.2rem; margin-top: -8px; box-sizing: border-box;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 4px; height: 18px; background: #FF8000; border-radius: 2px;"></div>
-                <span style="font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; font-weight: 600; color: #CBD5E1;">PRESSÃO BAROMÉTRICA: {pressao} hPa</span>
+                <div style="width: 4px; height: 16px; background: #FF8000; border-radius: 2px;"></div>
+                <span style="font-family: 'Rajdhani', sans-serif; font-size: 0.88rem; font-weight: 600; color: #CBD5E1;">PRESSÃO ATMOSFÉRICA: {pressao} hPa</span>
             </div>
-            <div style="font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; color: #00D2BE;">
+            <div style="font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; font-weight: 700; color: #00D2BE;">
                 LAT {coords['lat']} | LON {coords['lon']}
             </div>
         </div>
@@ -431,7 +438,7 @@ def main():
 
     st.markdown("""
     <div class="section-label">Previsão Estendida</div>
-    <div class="section-title">Próximos 7 Dias de Calendário</div>
+    <div class="section-title">Próximos 7 Dias</div>
     """, unsafe_allow_html=True)
 
     if "daily" in data:
